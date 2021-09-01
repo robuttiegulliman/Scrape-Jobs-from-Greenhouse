@@ -1,0 +1,42 @@
+
+
+def greenhouse_dfinity():
+    import requests
+    from bs4 import BeautifulSoup as bs
+    import pandas as pd
+    
+    # enter the Company jobs page link in the form of  https://boards.greenhouse.io/company-name
+    
+    page_link = requests.get('https://boards.greenhouse.io/dfinity')
+
+    webpage = bs(page_link.content, 'html.parser')
+
+    links = webpage.find_all(class_='opening')
+    job = []
+    for link in links:
+        job_apply_url = "https://boards.greenhouse.io/" + link.a['href']
+        job_category = link.find_previous_sibling('h2').get_text()
+        individual_job = requests.get(job_apply_url)
+        job_page = bs(individual_job.content, "html.parser")
+
+        job_title = job_page.find("h1").get_text()
+        job_location = job_page.find(class_="location").get_text().strip()
+        job_description = job_page.find(id='content')
+        
+     # the script extracts 5 elemments
+     # 1.  Job Tile
+     # 2. Job Location
+     # 3. Job Category
+     # 4. Job Description
+     # 5. Application url
+     
+        job_full = [job_title, job_location, job_category, job_description, job_apply_url]
+
+        job.append(job_full)
+
+        df = pd.DataFrame(job, columns=['job_title', 'job_location', 'job_category', 'job_description',
+                                        'job_apply_url'])
+                                        
+    # Pandas saves the file to the root directory
+    
+        df.to_csv('greenhouse_dfinity.csv', index=False)
